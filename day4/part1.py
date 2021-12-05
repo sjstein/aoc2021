@@ -1,14 +1,76 @@
 # D4P1
-
-fname = 'input_p1'
-fp = open(fname, 'r')
-drawn_nums = fp.readline().split(',')
 card = []   # List of bingo cards
 blank = []   # List of blank (to be filled in) cards
 row = []    # Contents of row in bingo card
 card_count = 0
 
+fname = 'input_p1'
+fp = open(fname, 'r')
+# First entry is the numbers drawn to determine winner
+drawn_nums = fp.readline().split(',')
 print(drawn_nums)
+
+def checkNumber(c, m, n):
+    """
+    c is the list containing all bingo cards
+    m is the list containing all cards with positions marked as matches
+    n is the number being checked for
+    """
+    for i in range(0, len(c)):
+        for j in range(0, len(c[0])):
+            for k in range(0, len(c[0][0])):
+                if c[i][j][k] == n:
+                    m[i][j][k] = 'X'
+    return
+
+
+def checkBingo(c, m):
+    """
+    :param  c: Card list
+            m: Matrix containing filled in bingo card grid locations
+    :return: [bingo?, compute]
+        bingo: True / False
+        compute : computed value of winning row / column
+    """
+    # Check for winning row
+    accum = 0
+    for i in range(0, len(m)):
+        for j in range(0, len(m[0])):
+            if m[i][j] == ['X', 'X', 'X', 'X', 'X']:
+                # Winning row discovered on card[i]
+                # Calculate the return value based on elements not already selected
+                for x in range(0, len(m[0])):
+                    for y in range(0, len(m[0][0])):
+                        if m[i][x][y] == '_':
+                            accum += int(c[i][x][y])
+                return [True, accum]
+    # No winning row found, now look for columns
+    for i in range(0, len(m)):
+        for k in range(0, len(m[0][0])):
+            if m[i][0][k] == 'X' and \
+                    m[i][1][k] == 'X' and \
+                    m[i][2][k] == 'X' and \
+                    m[i][3][k] == 'X' and \
+                    m[i][4][k] == 'X':
+                for x in range(0, len(m[0])):
+                    for y in range(0, len(m[0][0])):
+                        if m[i][x][y] == '_':
+                            accum += int(c[i][x][y])
+                return [True, accum]
+    return[False, 0]
+
+
+def printCards(c):
+    for i in range(0, len(c)):
+        for j in range(0, len(c[0])):
+            print(c[i][j])
+        print('---')
+
+    return
+
+
+# Now parse each bingo card into a list, each element of that lists consists of 5 lists of 5 numbers each
+#  corresponding to a square array (5x5) representing a given bingo card
 
 for line in fp:
     if line.rstrip() == '':
@@ -17,10 +79,32 @@ for line in fp:
         row.append(line.rstrip().split())
 
 print(f'found {card_count} cards')
+print(row)
+
 # We now have a list of rows of ALL cards and need to chunk those into a card list
 for c in range(0, card_count):
-    card.append([row[c],row[c+1],row[c+2],row[c+3],row[c+4]])
-    c += len(row[0])
+    ind = c * len(row[0])
+    card.append([row[ind], row[ind+1], row[ind+2], row[ind+3], row[ind+4]])
+    blank.append([['_', '_', '_', '_', '_'],
+                 ['_', '_', '_', '_', '_'],
+                 ['_', '_', '_', '_', '_'],
+                 ['_', '_', '_', '_', '_'],
+                 ['_', '_', '_', '_', '_']])
+    print(c)
 
-# Now the list card contains five rows (lists) of numbers
-# We will need to input a number and return a
+# Iterate through the input list of drawn numbers
+
+printCards(card)
+for num in drawn_nums:
+    print(f'Checking cards with value {num}')
+    checkNumber(card, blank, num)
+    printCards(blank)
+    ret = checkBingo(card, blank)
+    if ret[0]:
+        print(f'found a winner with {ret[1]}')
+        print(f'answer: {ret[1] * int(num)}')
+        print(blank)
+        break
+
+
+
